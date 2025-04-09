@@ -1,0 +1,43 @@
+---
+name: Run `deploy-prefect-flows` Cloud Run Job
+
+"on":
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  # First, build a docker image that contains your prefect.yaml file and well as your flows
+  build_prefect_flows_image:
+    ...
+
+  run_deploy_prefect_flows:
+    name: Run deploy-prefect-flows job
+    runs-on: ubuntu-latest
+    permissions:
+      # required to read from the repo
+      contents: read
+      # required to obtain Google Cloud service account credentials
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Run deploy-prefect-flows
+        run: |
+          gcloud run jobs update deploy-prefect-flows \
+          --image us-docker.pkg.dev/gcp-project-id/prefect-flows:latest \
+          --project=gcp-project-id \
+          --quiet \
+          --region=us-east1 \
+          --wait

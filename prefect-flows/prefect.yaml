@@ -1,0 +1,16 @@
+name: flows
+prefect-version: 3.2.7
+
+pull:
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/jamiezieziula/deploy-to-prefect-server
+      branch: main
+      access_token: "{{ prefect.blocks.secret.github-pat }}"
+
+deployments:
+  - name: Hello World
+    schedule:
+      interval: 30
+    entrypoint: prefect-flows/deployments/hello-deployments/flow.py:hello_deployments
+    work_pool:
+      name: my-work-pool
